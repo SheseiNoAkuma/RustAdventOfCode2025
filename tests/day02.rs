@@ -7,3 +7,8 @@ fn day02_part1_real_input() {
     assert_eq!(Day02.part1(input).unwrap(), "37314786486");
 }
 
+#[test]
+fn day02_part2_real_input() {
+    let input = include_str!("../inputs/day02.txt");
+    assert_eq!(Day02.part2(input).unwrap(), "47477053982");
+}
