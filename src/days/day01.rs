@@ -1,3 +1,4 @@
+use std::cmp::min;
 use crate::{AocResult, Day};
 use std::error::Error;
 use std::fmt;
@@ -14,25 +15,71 @@ impl Day for Day01 {
     }
 
     fn part1(&self, input: &str) -> AocResult<String> {
-        let rotations =
-            parse_input(input)?
-                .iter()
-                .fold((STARTING_POSITION, 0), |(pos, counter), r| {
-                    let new_pos: i32 = (match r.direction {
-                        Direction::Left => pos - r.length,
-                        Direction::Right => pos + r.length,
-                    }) % TOTAL_POSITIONS;
+        let times_on_zero = parse_input(input)?
+            .iter()
+            .fold((STARTING_POSITION, 0), |(pos, counter), r| {
+                let new_pos: i32 = (match r.direction {
+                    Direction::Left => pos - r.length,
+                    Direction::Right => pos + r.length,
+                })
+                .rem_euclid(TOTAL_POSITIONS);
 
-                    let new_counter = if new_pos == 0 { counter + 1 } else { counter };
-                    (new_pos, new_counter)
-                });
+                let new_counter = if new_pos == 0 { counter + 1 } else { counter };
+                (new_pos, new_counter)
+            })
+            .1
+            .to_string();
 
-        Ok(rotations.1.to_string())
+        Ok(times_on_zero)
     }
 
     fn part2(&self, input: &str) -> AocResult<String> {
-        println!("{}", input);
-        todo!("not yet implemented")
+        let times_on_zero = parse_input(input)?
+            .iter()
+            .fold((STARTING_POSITION, 0), |(pos, counter), r| {
+                let new_pos_absolute: i32 = match r.direction {
+                    Direction::Left => pos - r.length,
+                    Direction::Right => pos + r.length,
+                };
+                let new_pos = new_pos_absolute.rem_euclid(TOTAL_POSITIONS);
+                let new_counter = match (pos, new_pos_absolute, new_pos) {
+                    (0, _, _) => {
+                        println!(
+                            "CASE 1 - Start {} -- Rotation {} -- absolute {} -- relative {} -- add {}",
+                            pos, r, new_pos_absolute, new_pos, r.rotations_over_zero()
+                        );
+                        counter + r.rotations_over_zero()
+                    },
+                    (_, 100, _) | (_, _, 0) => {
+                        println!(
+                            "CASE 2 - Start {} -- Rotation {} -- absolute {} -- relative {} -- add {} + 1",
+                            pos, r, new_pos_absolute, new_pos, r.rotations_over_zero()
+                        );
+                        counter + 1
+                    }
+                    (_, new_pos_absolute, new_pos) if new_pos_absolute != new_pos => {
+                        let moves = min(new_pos_absolute.abs(), r.length);
+                        println!(
+                            "CASE 3 - Start {} -- Rotation {} -- absolute {} -- relative {} -- add {} + 1",
+                            pos, r, new_pos_absolute, new_pos, moves / TOTAL_POSITIONS
+                        );
+                        counter + (moves / TOTAL_POSITIONS) + 1
+                    },
+                    _ => {
+                        println!(
+                            "CASE 4 - Start {} -- Rotation {} -- absolute {} -- relative {} -- add 0",
+                            pos, r, new_pos_absolute, new_pos
+                        );
+                        counter
+                    },
+                };
+
+                (new_pos, new_counter)
+            })
+            .1
+            .to_string();
+
+        Ok(times_on_zero)
     }
 }
 
@@ -68,6 +115,11 @@ impl TryFrom<char> for Direction {
 struct Rotation {
     direction: Direction,
     length: i32,
+}
+impl Rotation {
+    fn rotations_over_zero(&self) -> i32 {
+        self.length / TOTAL_POSITIONS
+    }
 }
 impl Display for Rotation {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -195,5 +247,23 @@ mod tests {
     fn part1_counts_lines() {
         let input = "L68\nL30\nR48\nL5\nR60\nL55\nL1\nL99\nR14\nL82";
         assert_eq!(Day01.part1(input).unwrap(), "3");
+    }
+
+    #[test]
+    fn part2_five_full_rotation_p1() {
+        let input = "L499";
+        assert_eq!(Day01.part2(input).unwrap(), "5");
+    }
+
+    #[test]
+    fn part2_five_full_rotation_p2() {
+        let input = "L500";
+        assert_eq!(Day01.part2(input).unwrap(), "5");
+    }
+
+    #[test]
+    fn part2_counts_lines() {
+        let input = "L68\nL30\nR48\nL5\nR60\nL55\nL1\nL99\nR14\nL82";
+        assert_eq!(Day01.part2(input).unwrap(), "6");
     }
 }
