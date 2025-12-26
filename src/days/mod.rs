@@ -8,6 +8,7 @@ pub mod day03;
 pub mod day04;
 pub mod day05;
 pub mod day06;
+pub mod day07;
 
 pub fn registry() -> BTreeMap<u32, Box<dyn Day>> {
     let mut m: BTreeMap<u32, Box<dyn Day>> = BTreeMap::new();
@@ -17,5 +18,6 @@ pub fn registry() -> BTreeMap<u32, Box<dyn Day>> {
     m.insert(4, Box::new(day04::Day04));
     m.insert(5, Box::new(day05::Day05));
     m.insert(6, Box::new(day06::Day06));
+    m.insert(7, Box::new(day07::Day07));
     m
 }
